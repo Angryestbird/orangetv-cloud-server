@@ -20,7 +20,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
-info:
-  app:
-    name: @name@
+        include: gateway,health,info
