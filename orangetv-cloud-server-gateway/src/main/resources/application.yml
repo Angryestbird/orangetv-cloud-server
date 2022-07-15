@@ -1,0 +1,26 @@
+server:
+  port: 9000
+
+# 允许使用lb开头的uri
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+  application:
+    name: @name@
+
+# gateway会自动注册服务到eureka
+eureka:
+  instance:
+    hostname: ${HOSTNAME:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+info:
+  app:
+    name: @name@
