@@ -1,0 +1,28 @@
+server:
+  port: 9500
+  servlet:
+    session:
+      cookie:
+        name: AUTH-SERVER
+
+eureka:
+  instance:
+    hostname: ${HOSTNAME:localhost}
+
+spring:
+  application:
+    name: @name@
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+#    org.springframework.boot.autoconfigure:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

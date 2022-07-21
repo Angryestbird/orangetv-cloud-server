@@ -13,6 +13,19 @@ spring:
     url: jdbc:mysql://localhost:3306/orangetv
     username: user
     password: pass
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9500
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+#    org.springframework.boot.autoconfigure:
 
 management:
   endpoints:

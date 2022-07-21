@@ -11,7 +11,6 @@
     <name>discovery</name>
     <description>Eureka based discovery server</description>
     <artifactId>orangetv-cloud-server-discovery</artifactId>
-    <version>${parent.version}</version>
 
     <dependencies>
         <dependency>

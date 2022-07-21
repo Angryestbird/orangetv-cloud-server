@@ -12,7 +12,7 @@
 
     <packaging>pom</packaging>
 
-    <name>OrangeTV</name>
+    <name>orange-tv</name>
     <description>Orange Cloud TV services</description>
 
     <groupId>com.orangetv.cloud</groupId>
@@ -81,7 +81,8 @@
 
     <modules>
         <module>orangetv-cloud-server-discovery</module>
-        <module>orangetv-cloud-server-video-store</module>
+        <module>orangetv-cloud-server-auth-oidc</module>
         <module>orangetv-cloud-server-gateway</module>
+        <module>orangetv-cloud-server-video</module>
     </modules>
 </project>

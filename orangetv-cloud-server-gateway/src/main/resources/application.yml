@@ -10,6 +10,29 @@ spring:
           enabled: true
   application:
     name: @name@
+  security:
+    oauth2:
+      client:
+        registration:
+          orangetv-cloud-server-gateway:
+            provider: spring
+            client-name: Orange Cloud TV
+            client-id: orangetv-cloud-server-gateway
+            client-secret: orangetv-cloud-server-gateway
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://127.0.0.1:9000/login/oauth2/code/{registrationId}"
+            scope: openid,video.metadata.read,video.metadata.write
+        provider:
+          spring:
+            issuer-uri: http://localhost:9500
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+#    org.springframework.boot.autoconfigure:
 
 # gateway会自动注册服务到eureka
 eureka:
