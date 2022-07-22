@@ -80,6 +80,7 @@
     </build>
 
     <modules>
+        <module>orangetv-cloud-server-album</module>
         <module>orangetv-cloud-server-discovery</module>
         <module>orangetv-cloud-server-auth-oidc</module>
         <module>orangetv-cloud-server-gateway</module>

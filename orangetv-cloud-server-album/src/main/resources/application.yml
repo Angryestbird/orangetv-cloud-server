@@ -1,0 +1,34 @@
+server:
+  port: 9700
+
+eureka:
+  instance:
+    hostname: ${HOSTNAME:localhost}
+
+spring:
+  application:
+    name: @name@
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/orangetv
+    username: user
+    password: pass
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9500
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+#    org.springframework.boot.autoconfigure:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
