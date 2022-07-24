@@ -18,6 +18,10 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9500
+  kafka:
+    bootstrap-servers: host.docker.internal:9095
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
 
 logging:
   level:

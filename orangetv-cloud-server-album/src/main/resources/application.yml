@@ -18,6 +18,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9500
+  kafka:
+    bootstrap-servers: host.docker.internal:9095
 
 logging:
   level:
