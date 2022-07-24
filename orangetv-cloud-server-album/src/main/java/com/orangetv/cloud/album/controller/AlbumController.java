@@ -1,15 +1,22 @@
 package com.orangetv.cloud.album.controller;
 
-import com.orangetv.cloud.album.openfeign.VideoClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 @RestController
 @RequestMapping("store")
@@ -17,17 +24,12 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class AlbumController {
 
-    private final VideoClient videoClient;
+    private final GridFsTemplate gridFsTemplate;
 
     @GetMapping(value = "{id}", produces = MediaType.IMAGE_PNG_VALUE)
-    public byte[] getById(@PathVariable int id) {
+    public ResponseEntity<GridFsResource> getById(@PathVariable String id) {
         log.info("get image from gridFS,id is {}", id);
-        return "album".getBytes(StandardCharsets.UTF_8);
-    }
-
-    @GetMapping("hello")
-    public String hello() {
-        log.info("hello from VIDEO-STORE");
-        return videoClient.hello();
+        var file = gridFsTemplate.findOne(query(where("id").is(new ObjectId(id))));
+        return ResponseEntity.ok(gridFsTemplate.getResource(Objects.requireNonNull(file)));
     }
 }

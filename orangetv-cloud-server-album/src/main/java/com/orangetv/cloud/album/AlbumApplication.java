@@ -1,6 +1,6 @@
 package com.orangetv.cloud.album;
 
-import com.orangetv.cloud.album.utilities.BearerTokenRequestInterceptor;
+import com.orangetv.cloud.album.utility.BearerTokenRequestInterceptor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;

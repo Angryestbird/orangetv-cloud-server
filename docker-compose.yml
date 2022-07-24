@@ -48,6 +48,7 @@ services:
       --override listener.security.protocol.map=$$KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
       --override inter.broker.listener.name=$$KAFKA_INTER_BROKER_LISTENER_NAME
       --override zookeeper.connect=$$KAFKA_ZOOKEEPER_CONNECT'
+    hostname: kafka
     depends_on:
       - zookeeper
     ports:

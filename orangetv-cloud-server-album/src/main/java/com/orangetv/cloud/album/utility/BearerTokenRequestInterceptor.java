@@ -1,4 +1,4 @@
-package com.orangetv.cloud.album.utilities;
+package com.orangetv.cloud.album.utility;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

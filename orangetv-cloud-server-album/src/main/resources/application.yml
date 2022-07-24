@@ -20,6 +20,12 @@ spring:
           issuer-uri: http://localhost:9500
   kafka:
     bootstrap-servers: host.docker.internal:9095
+  data:
+    mongodb:
+      gridfs:
+        database: album-store
+      uri: mongodb://root:example@host.docker.internal
+      database: album-store
 
 logging:
   level:
