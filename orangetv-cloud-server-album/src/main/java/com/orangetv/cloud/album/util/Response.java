@@ -1,4 +1,4 @@
-package com.orangetv.cloud.videostore.util;
+package com.orangetv.cloud.album.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

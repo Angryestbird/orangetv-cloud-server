@@ -21,7 +21,7 @@ spring:
   kafka:
     bootstrap-servers: host.docker.internal:9095
     producer:
-      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
   sql:
     init:
       username: root

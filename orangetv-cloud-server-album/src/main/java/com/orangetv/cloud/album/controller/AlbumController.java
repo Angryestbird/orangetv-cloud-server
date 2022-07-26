@@ -28,8 +28,8 @@ public class AlbumController {
 
     @GetMapping(value = "{id}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<GridFsResource> getById(@PathVariable String id) {
-        log.info("get image from gridFS,id is {}", id);
-        var file = gridFsTemplate.findOne(query(where("id").is(new ObjectId(id))));
+        log.info("get image from gridFS, id is {}", id);
+        var file = gridFsTemplate.findOne(query(where("_id").is(new ObjectId(id))));
         return ResponseEntity.ok(gridFsTemplate.getResource(Objects.requireNonNull(file)));
     }
 }

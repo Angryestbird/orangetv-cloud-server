@@ -28,4 +28,11 @@ public class KafkaClientConfig {
                 .partitions(1).replicas(1).compact()
                 .build();
     }
+
+    @Bean
+    public NewTopic SystemInfoTopic() {
+        return TopicBuilder.name("system-info")
+                .partitions(1).replicas(1).compact()
+                .build();
+    }
 }

@@ -1,6 +1,10 @@
 package com.orangetv.cloud.album.service;
 
-import com.orangetv.cloud.album.openfeign.VideoClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.orangetv.cloud.album.config.OrangeTVConfigProps;
+import com.orangetv.cloud.album.model.Video;
+import com.orangetv.cloud.album.oauth2client.ReactiveVideoClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -9,57 +13,83 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.Java2DFrameConverter;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.*;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AlbumStoreService {
 
-    private final VideoClient videoClient;
     private final GridFsTemplate gridFsTemplate;
-    private final TaskExecutor taskExecutor;
+    private final AsyncTaskExecutor taskExecutor;
+    private final ReactiveVideoClient videoClient;
 
-    public void onVideoMetadataGenerated(int videoId, String msg) {
-        String videoPath = getVideoPath(msg);
+    private final ObjectMapper objectMapper;
+    private final OrangeTVConfigProps props;
+
+    public void onVideoMetadataGenerated(long videoId, String msg) {
+        log.info("video {} metadata generated\n{}", videoId, msg);
+        Video video = parseJSON(msg, Video.class);
+        String videoPath = getVideoPath(video);
         if (StringUtils.isBlank(videoPath)) {
             log.error("fail to extract video path.");
             return;
         }
         try (var outputStream = new PipedOutputStream();
              var inputStream = new PipedInputStream(outputStream)) {
-            taskExecutor.execute(() -> {
+            var latch = new CountDownLatch(1);
+            var lengthFuture = taskExecutor.submit(() -> {
+                long length = 0;
                 try {
-                    videoImage(videoPath, outputStream);
+                    log.info("processing {}", videoPath);
+                    length = videoImage(videoPath, outputStream);
+
                 } catch (FrameGrabber.Exception e) {
                     log.error("Failed to extract image.", e);
                 }
+                try {
+                    //noinspection ResultOfMethodCallIgnored
+                    latch.await(50, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    log.error("interrupted", e);
+                }
+                return length;
             });
-            var objectId = gridFsTemplate
-                    .store(inputStream, getPngPath(), MediaType.IMAGE_PNG_VALUE);
-            videoClient.videoPosterGenerated(videoId, objectId.toString());
-        } catch (IOException e) {
-            log.error("Failed to pipe stream.", e);
+            var objectId = gridFsTemplate.store(inputStream, getPngPath(),
+                    MediaType.IMAGE_PNG_VALUE, video);
+            latch.countDown();
+            video.setCover(objectId.toString());
+            video.setLength(lengthFuture.get());
+            videoClient.updateById(video);
+        } catch (IOException | InterruptedException | ExecutionException e) {
+            log.error("failed to store image to GridFS", e);
         }
     }
 
-    private String getVideoPath(String msg) {
-        return "";
+    private String getVideoPath(Video video) {
+        var dir = new File(props.getRootPath() + video.getPath());
+        return new File(dir, video.getName()).getPath();
     }
 
-    byte[] generatePoster(String videoPath) {
-        return null;
+    @SuppressWarnings("SameParameterValue")
+    private <T> T parseJSON(String s, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(s, clazz);
+        } catch (JsonProcessingException e) {
+            log.error("failed to parse json", e);
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**
@@ -67,27 +97,36 @@ public class AlbumStoreService {
      *
      * @param filePath     视频路径
      * @param outputStream 输出流
-     * @throws FrameGrabber.Exception
+     * @return 视频时间长度
+     * @throws FrameGrabber.Exception 解码异常
      */
-    public static void videoImage(String filePath, OutputStream outputStream)
+    public static long videoImage(String filePath, OutputStream outputStream)
             throws FrameGrabber.Exception {
         FFmpegFrameGrabber ff = FFmpegFrameGrabber.createDefault(filePath);
 
         ff.start();
-        int ffLength = ff.getLengthInFrames();
+        int ffFrameLength = ff.getLengthInFrames();
+        long ffTimeLength = ff.getLengthInTime();
         Frame f;
         int i = 0;
-        while (i < ffLength) {
+        while (i < ffFrameLength) {
             f = ff.grabImage();
             //截取第6帧
             if ((i > 5) && (f.image != null)) {
                 //执行截图并写入到输出流
                 doExecuteFrame(f, outputStream);
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    log.error("failed to close", e);
+                }
                 break;
             }
             i++;
         }
         ff.stop();
+
+        return ffTimeLength;
     }
 
     /**

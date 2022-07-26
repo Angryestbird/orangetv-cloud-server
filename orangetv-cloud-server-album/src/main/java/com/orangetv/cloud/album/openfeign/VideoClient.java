@@ -1,12 +1,14 @@
 package com.orangetv.cloud.album.openfeign;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * OpenFeign OAuth2 拦截器只能处理来自gateway的调用
+ */
 @FeignClient("VIDEO-STORE")
 public interface VideoClient {
 
-    @PutMapping("video/poster/{videoId}/{posterId}")
-    void videoPosterGenerated(@PathVariable Integer videoId, @PathVariable String posterId);
+    @GetMapping("video/ping")
+    String ping();
 }

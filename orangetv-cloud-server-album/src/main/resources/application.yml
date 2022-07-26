@@ -18,6 +18,19 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9500
+      client:
+        registration:
+          orangetv-cloud-server-album:
+            provider: spring
+            client-name: Orange Cloud TV
+            client-id: orangetv-cloud-server-album
+            client-secret: orangetv-cloud-server-album
+            authorization-grant-type: client_credentials
+            scope: openid,video.metadata.read,video.metadata.write
+        provider:
+          spring:
+            issuer-uri: http://localhost:9500
+
   kafka:
     bootstrap-servers: host.docker.internal:9095
   data:
@@ -26,6 +39,10 @@ spring:
         database: album-store
       uri: mongodb://root:example@host.docker.internal
       database: album-store
+
+orangetv:
+  root-path: ${SCAN_PATH:D:\Video\videocache}
+  app-id: orangetv-album-service-0
 
 logging:
   level:
@@ -40,3 +57,8 @@ management:
     web:
       exposure:
         include: health,info
+
+# spring-security-oauth is no longer actively maintained
+#feign:
+#  oauth2:
+#    enabled: true

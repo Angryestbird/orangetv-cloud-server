@@ -55,7 +55,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+        RegisteredClient gateway = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("orangetv-cloud-server-gateway")
                 .clientSecret("{noop}orangetv-cloud-server-gateway")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
@@ -70,8 +70,21 @@ public class AuthorizationServerConfig {
                         .requireAuthorizationConsent(false).build())
                 .build();
 
+        RegisteredClient album = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("orangetv-cloud-server-album")
+                .clientSecret("{noop}orangetv-cloud-server-album")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .scope(OidcScopes.OPENID)
+                .scope("video.metadata.read")
+                .scope("video.metadata.write")
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(false).build())
+                .build();
+
         // Save registered client in in-memory db
-        return new InMemoryRegisteredClientRepository(registeredClient);
+        return new InMemoryRegisteredClientRepository(gateway, album);
     }
 
 

@@ -9,6 +9,7 @@ import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.processor.WallclockTimestampExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 @EnableKafka
 @EnableKafkaStreams
+@ConfigurationPropertiesScan
 @Configuration
 public class KafkaStreamsConfig {
 
@@ -32,11 +34,11 @@ public class KafkaStreamsConfig {
     private AlbumStoreService albumStoreService;
 
     @Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
-    public KafkaStreamsConfiguration kStreamsConfigs(KafkaProperties bootProperties) {
+    public KafkaStreamsConfiguration kStreamsConfigs(KafkaProperties bootProperties, OrangeTVConfigProps myProps) {
         Map<String, Object> props = new HashMap<>();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "video-service");
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, myProps.getAppId());
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootProperties.getBootstrapServers());
-        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class.getName());
         return new KafkaStreamsConfiguration(props);
@@ -50,8 +52,8 @@ public class KafkaStreamsConfig {
     }
 
     @Bean
-    public KStream<Integer, String> kStream(StreamsBuilder kStreamBuilder) {
-        KStream<Integer, String> stream = kStreamBuilder.stream("video-metadata");
+    public KStream<Long, String> kStream(StreamsBuilder kStreamBuilder) {
+        KStream<Long, String> stream = kStreamBuilder.stream("video-metadata");
         stream.foreach(albumStoreService::onVideoMetadataGenerated);
         stream.print(Printed.toSysOut());
         return stream;

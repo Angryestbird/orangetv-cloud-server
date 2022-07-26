@@ -1,5 +1,7 @@
 package com.orangetv.cloud.videostore.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orangetv.cloud.videostore.config.OrangeTVConfigProps;
 import com.orangetv.cloud.videostore.mapper.MyVideoMapper;
 import com.orangetv.cloud.videostore.model.Video;
@@ -8,9 +10,10 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.util.function.Consumer;
@@ -21,33 +24,40 @@ import java.util.function.Consumer;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ExtractorService {
+public class ExtractorService implements ApplicationRunner {
 
     private final MyVideoMapper videoMapper;
+    private final ObjectMapper objectMapper;
     private final OrangeTVConfigProps props;
-
-    @PostConstruct
-    public void generateMetadata() {
-        var scanner = FileScanner.builder()
-                .basePath(props.getVideoScanPath())
-                .suffixes(props.getVideoScanSuffixes().split(","))
-                .callback(this::extractMetadata)
-                .build();
-        scanner.scan();
-    }
+    private final EventPublisher publisher;
 
     public void extractMetadata(File file) {
         log.info("Adding video to repo, filename is {}.", file.getName());
 
         var video = new Video();
         video.setName(file.getName());
-        video.setPath(file.getPath());
+        File rootDir = new File(props.getVideoScanPath());
+        video.setPath(file.getParent().substring(rootDir.getPath().length()));
         if (videoMapper.selectOne(VideoRepo.videoExists(video)).isPresent()) {
-            log.info("file {} metadata exists", file.getPath());
-            file.getAbsolutePath();
+            log.warn("file: '{}' metadata exists", file.getPath());
             return;
         }
-        videoMapper.insert(video);
+        try {
+            videoMapper.insert(video);
+            String json = objectMapper.writeValueAsString(video);
+            publisher.publishMetadata(video.getId(), json);
+        } catch (JsonProcessingException e) {
+            log.error("failed to parse obj {}", video, e);
+        }
+    }
+
+    @Override
+    public void run(ApplicationArguments args) {
+        FileScanner.builder()
+                .basePath(props.getVideoScanPath())
+                .suffixes(props.getVideoScanSuffixes().split(","))
+                .callback(this::extractMetadata)
+                .build().scan();
     }
 
     @Builder

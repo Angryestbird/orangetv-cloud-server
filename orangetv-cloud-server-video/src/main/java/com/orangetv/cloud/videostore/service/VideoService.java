@@ -1,16 +1,20 @@
 package com.orangetv.cloud.videostore.service;
 
 import com.orangetv.cloud.videostore.mapper.MyVideoMapper;
-import com.orangetv.cloud.videostore.model.Video;
 import com.orangetv.cloud.videostore.util.Pageable;
+import com.orangetv.cloud.videostore.vo.VideoVO;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.var;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class VideoService {
 
+    @Getter
     private final MyVideoMapper videoMapper;
 
     /**
@@ -20,9 +24,10 @@ public class VideoService {
      * @param pageSize 页条数
      * @return Pageable<VideoRecord>
      */
-    public Pageable<Video> page(int current, int pageSize) {
-        var result = videoMapper.page(current, pageSize);
-        return Pageable.<Video>builder().data(result)
+    public Pageable<VideoVO> page(int current, int pageSize) {
+        var result = videoMapper.page(current, pageSize)
+                .stream().map(VideoVO::from).collect(Collectors.toList());
+        return Pageable.<VideoVO>builder().data(result)
                 .current(current).total(videoMapper.pageCnt(current, pageSize)).build();
     }
 
@@ -34,9 +39,10 @@ public class VideoService {
      * @param query    搜索内容
      * @return Pageable<VideoRecord>
      */
-    public Pageable<Video> page(int current, int pageSize, String query) {
-        var result = videoMapper.search(current, pageSize, query);
-        return Pageable.<Video>builder().data(result)
+    public Pageable<VideoVO> page(int current, int pageSize, String query) {
+        var result = videoMapper.search(current, pageSize, query)
+                .stream().map(VideoVO::from).collect(Collectors.toList());
+        return Pageable.<VideoVO>builder().data(result)
                 .current(current).total(videoMapper.searchCnt(current, pageSize, query)).build();
     }
 }
