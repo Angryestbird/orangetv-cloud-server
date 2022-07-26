@@ -45,8 +45,8 @@ public class DefaultSecurityConfig {
 
     @Bean
     UserDetailsService users() {
-        //noinspection deprecation
-        UserDetails user = User.withDefaultPasswordEncoder()
+        @SuppressWarnings("deprecation") UserDetails user = User
+                .withDefaultPasswordEncoder()
                 .username("user")
                 .password("pass")
                 .roles("USER")

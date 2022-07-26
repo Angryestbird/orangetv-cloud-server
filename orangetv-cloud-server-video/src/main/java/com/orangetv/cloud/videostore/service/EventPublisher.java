@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class VideoEventPublisher {
+public class EventPublisher {
 
     private final NewTopic videoMetadataTopic;
     private final KafkaTemplate<Integer, String> kafkaTemplate;

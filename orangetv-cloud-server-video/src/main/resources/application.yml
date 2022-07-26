@@ -22,6 +22,12 @@ spring:
     bootstrap-servers: host.docker.internal:9095
     producer:
       key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+  sql:
+    init:
+      username: root
+      password: example
+      schema-locations: classpath:schema-mysql.sql
+      mode: always
 
 logging:
   level:
@@ -29,10 +35,18 @@ logging:
     org.springframework.web: INFO
     org.springframework.security: TRACE
     org.springframework.security.oauth2: TRACE
-#    org.springframework.boot.autoconfigure:
+    #    org.springframework.boot.autoconfigure:
+    com.orangetv.cloud.videostore.mapper: TRACE
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+orangetv:
+  video-scan-path: ${SCAN_PATH:D:\Video\videocache}
+  video-scan-suffixes: .mp4,.MP4
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
