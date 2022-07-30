@@ -17,7 +17,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9500
+          issuer-uri: http://${OUTER_HOST:localhost}:9500
       client:
         registration:
           orangetv-cloud-server-album:
@@ -29,7 +29,7 @@ spring:
             scope: openid,video.metadata.read,video.metadata.write
         provider:
           spring:
-            issuer-uri: http://localhost:9500
+            issuer-uri: http://${OUTER_HOST:localhost}:9500
 
   kafka:
     bootstrap-servers: host.docker.internal:9095

@@ -1,21 +1,22 @@
 package com.orangetv.cloud.videostore;
 
-import com.orangetv.cloud.videostore.config.OrangeTVConfigProps;
 import com.orangetv.cloud.videostore.service.EventPublisher;
 import lombok.var;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+@EnableScheduling
 @EnableEurekaClient
 @SpringBootApplication
-@EnableConfigurationProperties(OrangeTVConfigProps.class)
+@ConfigurationPropertiesScan
 public class VideoApplication {
 
     public static void main(String[] args) {

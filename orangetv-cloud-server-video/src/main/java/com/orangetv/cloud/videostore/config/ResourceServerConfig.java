@@ -16,6 +16,7 @@
 package com.orangetv.cloud.videostore.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,11 +29,17 @@ public class ResourceServerConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeRequests()
-                .mvcMatchers("/**")
+                .mvcMatchers(HttpMethod.GET,"/**")
                     .access("hasAuthority('SCOPE_video.metadata.read')")
-            .and()
-                .oauth2ResourceServer()
-                    .jwt();
+                .mvcMatchers(HttpMethod.POST,"/**")
+                    .access("hasAuthority('SCOPE_video.metadata.write')")
+                .mvcMatchers(HttpMethod.DELETE,"/**")
+                    .access("hasAuthority('SCOPE_video.metadata.write')")
+                .mvcMatchers(HttpMethod.PUT,"/**")
+                    .access("hasAuthority('SCOPE_video.metadata.write')")
+                .and()
+            .oauth2ResourceServer()
+                .jwt();
         return http.build();
     }
     // @formatter:on

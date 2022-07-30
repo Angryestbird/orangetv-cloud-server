@@ -40,6 +40,16 @@ public final class VideoDynamicSqlSupport {
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.length")
     public static final SqlColumn<Long> length = video.length;
 
+    /**
+     * Database Column Remarks:
+     *   播放量
+     */
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.play")
+    public static final SqlColumn<Long> play = video.play;
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.repo_id")
+    public static final SqlColumn<Integer> repoId = video.repoId;
+
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source Table: video")
     public static final class Video extends AliasableSqlTable<Video> {
         public final SqlColumn<Integer> id = column("id", JDBCType.INTEGER);
@@ -51,6 +61,10 @@ public final class VideoDynamicSqlSupport {
         public final SqlColumn<String> cover = column("cover", JDBCType.VARCHAR);
 
         public final SqlColumn<Long> length = column("length", JDBCType.BIGINT);
+
+        public final SqlColumn<Long> play = column("play", JDBCType.BIGINT);
+
+        public final SqlColumn<Integer> repoId = column("repo_id", JDBCType.INTEGER);
 
         public Video() {
             super("video", Video::new);

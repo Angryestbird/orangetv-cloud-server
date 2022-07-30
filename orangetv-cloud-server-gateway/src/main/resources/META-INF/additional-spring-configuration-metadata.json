@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "spring.cloud.gateway.actuator.verbose.enabled",
+      "type": "java.lang.String",
+      "description": "默认为true，该为false开启legacy模式."
+    }
+  ]
+}

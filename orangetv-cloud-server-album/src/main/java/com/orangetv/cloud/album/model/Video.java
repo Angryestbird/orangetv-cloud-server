@@ -9,4 +9,7 @@ public class Video {
     private String path;
     private String cover;
     private Long length;
+
+    // video repo ID
+    private Integer repoId;
 }

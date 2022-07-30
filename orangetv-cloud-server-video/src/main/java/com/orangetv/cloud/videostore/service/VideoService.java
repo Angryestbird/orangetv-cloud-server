@@ -25,10 +25,12 @@ public class VideoService {
      * @return Pageable<VideoRecord>
      */
     public Pageable<VideoVO> page(int current, int pageSize) {
-        var result = videoMapper.page(current, pageSize)
-                .stream().map(VideoVO::from).collect(Collectors.toList());
-        return Pageable.<VideoVO>builder().data(result)
-                .current(current).total(videoMapper.pageCnt(current, pageSize)).build();
+        if (current < 1) current = 1;
+        int offset = (current - 1) * 10;
+        var list = videoMapper.select(c -> c.limit(pageSize).offset(offset));
+        var result = list.stream().map(VideoVO::from).collect(Collectors.toList());
+        return Pageable.<VideoVO>builder().data(result).current(current)
+                .total((int) videoMapper.count(c -> c)).build();
     }
 
     /**
@@ -40,9 +42,11 @@ public class VideoService {
      * @return Pageable<VideoRecord>
      */
     public Pageable<VideoVO> page(int current, int pageSize, String query) {
-        var result = videoMapper.search(current, pageSize, query)
+        if (current < 1) current = 1;
+        int offset = (current - 1) * 10;
+        var result = videoMapper.search(pageSize, offset, query)
                 .stream().map(VideoVO::from).collect(Collectors.toList());
-        return Pageable.<VideoVO>builder().data(result)
-                .current(current).total(videoMapper.searchCnt(current, pageSize, query)).build();
+        return Pageable.<VideoVO>builder().data(result).current(current)
+                .total(videoMapper.searchCnt(pageSize, offset, query)).build();
     }
 }

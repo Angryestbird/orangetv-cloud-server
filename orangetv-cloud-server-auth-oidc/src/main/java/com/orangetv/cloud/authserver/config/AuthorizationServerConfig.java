@@ -20,15 +20,19 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.orangetv.cloud.authserver.jose.Jwks;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -39,16 +43,37 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
+    @Value("http://${OUTER_HOST:localhost}:9500")
+    private String issuerUri;
+
+    @Value("http://${OUTER_HOST:127.0.0.1}:${OUTER_PORT:8080}" +
+            "/login/oauth2/code/orangetv-cloud-server-gateway")
+    private String gatewayRedirectUri;
+
+    private final DefaultSecurityConfig defaultSecurityConfig;
+
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+            throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http
+                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
                 .exceptionHandling(exceptions ->
-                        exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                        exceptions.authenticationEntryPoint(
+                                new LoginUrlAuthenticationEntryPoint(
+                                        defaultSecurityConfig.loginPage
+                                )
+                        )
                 );
         return http.build();
     }
@@ -62,14 +87,13 @@ public class AuthorizationServerConfig {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .redirectUri("http://127.0.0.1:9000/login/oauth2/code/orangetv-cloud-server-gateway")
+                .redirectUri(gatewayRedirectUri)
                 .scope(OidcScopes.OPENID)
                 .scope("video.metadata.read")
-                .scope("video.metadata.write")
+                .scope("album.metadata.read")
                 .clientSettings(ClientSettings.builder()
                         .requireAuthorizationConsent(false).build())
                 .build();
-
         RegisteredClient album = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("orangetv-cloud-server-album")
                 .clientSecret("{noop}orangetv-cloud-server-album")
@@ -82,9 +106,21 @@ public class AuthorizationServerConfig {
                 .clientSettings(ClientSettings.builder()
                         .requireAuthorizationConsent(false).build())
                 .build();
+        RegisteredClient video = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("orangetv-cloud-server-video")
+                .clientSecret("{noop}orangetv-cloud-server-video")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .scope(OidcScopes.OPENID)
+                .scope("gateway.metadata.read")
+                .scope("gateway.metadata.write")
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(false).build())
+                .build();
 
         // Save registered client in in-memory db
-        return new InMemoryRegisteredClientRepository(gateway, album);
+        return new InMemoryRegisteredClientRepository(gateway, album, video);
     }
 
 
@@ -97,7 +133,6 @@ public class AuthorizationServerConfig {
 
     @Bean
     public ProviderSettings providerSettings() {
-        return ProviderSettings.builder().issuer("http://localhost:9500").build();
+        return ProviderSettings.builder().issuer(issuerUri).build();
     }
-
 }

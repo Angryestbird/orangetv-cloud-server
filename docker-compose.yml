@@ -54,6 +54,17 @@ services:
     ports:
       - 9095:9095
 
+  video-repo:
+    image: nginx
+    hostname: orangetv-cloud-web
+    volumes:
+      - /d/Video/videocache:/usr/share/nginx/html:ro
+      - ./nginx-template:/etc/nginx/templates:ro
+    environment:
+      - OUTER_HOSTNAME=$USERDOMAIN
+    ports:
+      - 9090:80
+
   zookeeper:
     image: ubuntu/zookeeper
     environment:

@@ -33,7 +33,7 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 @Mapper
 public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, CommonUpdateMapper {
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source Table: video")
-    BasicColumn[] selectList = BasicColumn.columnList(id, name, path, cover, length);
+    BasicColumn[] selectList = BasicColumn.columnList(id, name, path, cover, length, play, repoId);
 
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source Table: video")
     @InsertProvider(type=SqlProviderAdapter.class, method="insert")
@@ -47,7 +47,9 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
         @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
         @Result(column="path", property="path", jdbcType=JdbcType.VARCHAR),
         @Result(column="cover", property="cover", jdbcType=JdbcType.VARCHAR),
-        @Result(column="length", property="length", jdbcType=JdbcType.BIGINT)
+        @Result(column="length", property="length", jdbcType=JdbcType.BIGINT),
+        @Result(column="play", property="play", jdbcType=JdbcType.BIGINT),
+        @Result(column="repo_id", property="repoId", jdbcType=JdbcType.INTEGER)
     })
     List<Video> selectMany(SelectStatementProvider selectStatement);
 
@@ -80,6 +82,8 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
             .map(path).toProperty("path")
             .map(cover).toProperty("cover")
             .map(length).toProperty("length")
+            .map(play).toProperty("play")
+            .map(repoId).toProperty("repoId")
         );
     }
 
@@ -90,6 +94,8 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
             .map(path).toPropertyWhenPresent("path", row::getPath)
             .map(cover).toPropertyWhenPresent("cover", row::getCover)
             .map(length).toPropertyWhenPresent("length", row::getLength)
+            .map(play).toPropertyWhenPresent("play", row::getPlay)
+            .map(repoId).toPropertyWhenPresent("repoId", row::getRepoId)
         );
     }
 
@@ -125,7 +131,9 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
         return dsl.set(name).equalTo(row::getName)
                 .set(path).equalTo(row::getPath)
                 .set(cover).equalTo(row::getCover)
-                .set(length).equalTo(row::getLength);
+                .set(length).equalTo(row::getLength)
+                .set(play).equalTo(row::getPlay)
+                .set(repoId).equalTo(row::getRepoId);
     }
 
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source Table: video")
@@ -133,7 +141,9 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
         return dsl.set(name).equalToWhenPresent(row::getName)
                 .set(path).equalToWhenPresent(row::getPath)
                 .set(cover).equalToWhenPresent(row::getCover)
-                .set(length).equalToWhenPresent(row::getLength);
+                .set(length).equalToWhenPresent(row::getLength)
+                .set(play).equalToWhenPresent(row::getPlay)
+                .set(repoId).equalToWhenPresent(row::getRepoId);
     }
 
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source Table: video")
@@ -143,6 +153,8 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
             .set(path).equalTo(row::getPath)
             .set(cover).equalTo(row::getCover)
             .set(length).equalTo(row::getLength)
+            .set(play).equalTo(row::getPlay)
+            .set(repoId).equalTo(row::getRepoId)
             .where(id, isEqualTo(row::getId))
         );
     }
@@ -154,6 +166,8 @@ public interface VideoMapper extends CommonCountMapper, CommonDeleteMapper, Comm
             .set(path).equalToWhenPresent(row::getPath)
             .set(cover).equalToWhenPresent(row::getCover)
             .set(length).equalToWhenPresent(row::getLength)
+            .set(play).equalToWhenPresent(row::getPlay)
+            .set(repoId).equalToWhenPresent(row::getRepoId)
             .where(id, isEqualTo(row::getId))
         );
     }

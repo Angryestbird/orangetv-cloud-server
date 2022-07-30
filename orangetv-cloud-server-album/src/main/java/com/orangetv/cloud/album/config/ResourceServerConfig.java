@@ -29,7 +29,7 @@ public class ResourceServerConfig {
         http
             .authorizeRequests()
                 .mvcMatchers("/**")
-                    .access("hasAuthority('SCOPE_video.metadata.read')")
+                    .access("hasAuthority('SCOPE_album.metadata.read')")
             .and()
                 .oauth2ResourceServer()
                     .jwt();

@@ -15,6 +15,7 @@
  */
 package com.orangetv.cloud.authserver.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,8 +25,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 /**
  * @author Joe Grandja
  * @since 0.1.0
@@ -33,13 +32,24 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class DefaultSecurityConfig {
 
+    @Value("${USERNAME:username}")
+    private String username;
+    @Value("${PASSWORD:password}")
+    private String password;
+
+    @Value("http://${OUTER_HOST:127.0.0.1}:${OUTER_PORT:8080}/user")
+    String loginPage;
+
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
                 )
-                .formLogin(withDefaults());
+                .formLogin(login -> login.loginPage(loginPage)
+                        .loginProcessingUrl("/login")
+                )
+                .csrf().disable();
         return http.build();
     }
 
@@ -47,9 +57,9 @@ public class DefaultSecurityConfig {
     UserDetailsService users() {
         @SuppressWarnings("deprecation") UserDetails user = User
                 .withDefaultPasswordEncoder()
-                .username("user")
-                .password("pass")
-                .roles("USER")
+                .username(username)
+                .password(password)
+                .roles("ADMIN", "USER")
                 .build();
         return new InMemoryUserDetailsManager(user);
     }

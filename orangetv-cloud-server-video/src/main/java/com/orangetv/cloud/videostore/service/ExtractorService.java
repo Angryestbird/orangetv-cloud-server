@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 /**
@@ -36,19 +37,36 @@ public class ExtractorService implements ApplicationRunner {
 
         var video = new Video();
         video.setName(file.getName());
+        video.setRepoId(props.getVideoRepoId());
         File rootDir = new File(props.getVideoScanPath());
-        video.setPath(file.getParent().substring(rootDir.getPath().length()));
+        video.setPath(calculateUrlPath(rootDir, file));
         if (videoMapper.selectOne(VideoRepo.videoExists(video)).isPresent()) {
             log.warn("file: '{}' metadata exists", file.getPath());
             return;
         }
         try {
-            videoMapper.insert(video);
+            videoMapper.insertSelective(video);
             String json = objectMapper.writeValueAsString(video);
             publisher.publishMetadata(video.getId(), json);
         } catch (JsonProcessingException e) {
             log.error("failed to parse obj {}", video, e);
         }
+    }
+
+    static String calculateUrlPath(File rootDir, File file) {
+        var fileDir = file.getParentFile();
+        var list = new ArrayList<String>();
+        while (!fileDir.equals(rootDir)) {
+            list.add(fileDir.getName());
+            fileDir = fileDir.getParentFile();
+        }
+        var stringBuilder = new StringBuilder();
+        for (int i = list.size() - 1; i >= 0; i--) {
+            stringBuilder.append("/");
+            stringBuilder.append(list.get(i));
+        }
+        stringBuilder.append("/");
+        return stringBuilder.toString();
     }
 
     @Override

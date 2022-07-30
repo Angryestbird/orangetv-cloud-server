@@ -17,7 +17,19 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9500
+          issuer-uri: http://${OUTER_HOST:localhost}:9500
+      client:
+        registration:
+          orangetv-cloud-server-video:
+            provider: spring
+            client-name: Orange Cloud TV
+            client-id: orangetv-cloud-server-video
+            client-secret: orangetv-cloud-server-video
+            authorization-grant-type: client_credentials
+            scope: openid,gateway.metadata.read,gateway.metadata.write
+        provider:
+          spring:
+            issuer-uri: http://${OUTER_HOST:localhost}:9500
   kafka:
     bootstrap-servers: host.docker.internal:9095
     producer:
@@ -45,6 +57,8 @@ management:
         include: health,info
 
 orangetv:
+  video-repo-id: 0
+  video-repo-url: ${REPO_URL:http://localhost:9090}
   video-scan-path: ${SCAN_PATH:D:\Video\videocache}
   video-scan-suffixes: .mp4,.MP4
 mybatis:

@@ -41,6 +41,16 @@ public class Video {
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.length")
     private Long length;
 
+    /**
+     * Database Column Remarks:
+     *   播放量
+     */
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.play")
+    private Long play;
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.repo_id")
+    private Integer repoId;
+
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.id")
     public Integer getId() {
         return id;
@@ -89,5 +99,25 @@ public class Video {
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.length")
     public void setLength(Long length) {
         this.length = length;
+    }
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.play")
+    public Long getPlay() {
+        return play;
+    }
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.play")
+    public void setPlay(Long play) {
+        this.play = play;
+    }
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.repo_id")
+    public Integer getRepoId() {
+        return repoId;
+    }
+
+    @Generated(value="org.mybatis.generator.api.MyBatisGenerator", comments="Source field: video.repo_id")
+    public void setRepoId(Integer repoId) {
+        this.repoId = repoId;
     }
 }
