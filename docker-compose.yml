@@ -2,6 +2,7 @@ version: "3.9"  # optional since v1.27.0
 services:
   mysql:
     image: mysql
+    restart: always
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - 3306:3306
@@ -11,6 +12,8 @@ services:
       MYSQL_DATABASE: orangetv
       MYSQL_PASSWORD: pass
       MYSQL_USER: user
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
 
   mongo:
     image: mongo
@@ -20,6 +23,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     ports:
       - 27017:27017
+    healthcheck:
+      test: exit $$(mongo --quiet --eval 'db.serverStatus().ok')
 
   mongo-express:
     image: mongo-express
@@ -30,8 +35,11 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+    healthcheck:
+      test: wget -O /dev/null localhost:8081
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
   kafka:
     image: ubuntu/kafka
@@ -39,7 +47,7 @@ services:
       TZ: Asia/Shanghai
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: INSIDE://kafka:9092,OUTSIDE://kafka:9095
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://127.0.0.1:9095
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://${OUTER_HOST}:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
     entrypoint: sh -c 'exec kafka-server-start.sh /etc/kafka/server.properties
@@ -50,18 +58,21 @@ services:
       --override zookeeper.connect=$$KAFKA_ZOOKEEPER_CONNECT'
     hostname: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - 9095:9095
+    healthcheck:
+      test: zookeeper-shell.sh zookeeper:2181 get /brokers/ids/0
 
   video-repo:
     image: nginx
-    hostname: orangetv-cloud-web
     volumes:
-      - /d/Video/videocache:/usr/share/nginx/html:ro
+      - ${VIDEO_ROOT}:/usr/share/nginx/html/video:ro
       - ./nginx-template:/etc/nginx/templates:ro
-    environment:
-      - OUTER_HOSTNAME=$USERDOMAIN
+    healthcheck:
+      test: curl -f localhost || exit 1
+    # can comment out if run by docker
     ports:
       - 9090:80
 
@@ -69,3 +80,115 @@ services:
     image: ubuntu/zookeeper
     environment:
       TZ: Asia/Shanghai
+    healthcheck:
+      test: zookeeper-shell.sh localhost:2181 version
+
+
+  # follows are Spring services
+  # comment out these config to debug locally
+  album:
+    image: openjdk:8-oraclelinux8
+    volumes:
+      - ./orangetv-cloud-server-album/target:/app:ro
+    entrypoint: sh -c 'exec java -jar /app/*.jar'
+    healthcheck:
+      test: curl -f http://localhost:9700/actuator/health || exit 1
+    expose:
+      - 9700
+    environment:
+      - EUREKA_HOST=discovery
+      - OUTER_HOST=$OUTER_HOST
+      - MONGO_HOST=mongo
+      - MYSQL_HOST=mysql
+    depends_on:
+      mongo:
+        condition: service_healthy
+      video:
+        condition: service_healthy
+
+  auth-oidc:
+    hostname: ${OUTER_HOST}
+    image: openjdk:8-jdk-alpine
+    volumes:
+      - ./orangetv-cloud-server-auth-oidc/target:/app:ro
+    entrypoint: sh -c 'exec java -jar /app/*.jar'
+    healthcheck:
+      test: wget -O /dev/null http://localhost:9500/actuator/health
+    expose:
+      - 9500
+    environment:
+      - EUREKA_HOST=discovery
+      - OUTER_HOST=$OUTER_HOST
+      - OUTER_PORT=$OUTER_PORT
+      - USERNAME=$ORANGE_TV_USERNAME
+      - PASSWORD=$ORANGE_TV_PASSWORD
+    ports:
+      - 9500:9500
+    depends_on:
+      discovery:
+        condition: service_healthy
+
+  discovery:
+    image: openjdk:8-jdk-alpine
+    volumes:
+      - ./orangetv-cloud-server-discovery/target:/app:ro
+    entrypoint: sh -c 'exec java -jar /app/*.jar'
+    healthcheck:
+      test: wget -O /dev/null http://localhost:8761/actuator/health
+    depends_on:
+      maven:
+        condition: service_completed_successfully
+    expose:
+      - 8761
+    ports:
+      - 8761:8761
+
+  gateway:
+    image: openjdk:8-jdk-alpine
+    volumes:
+      - ./orangetv-cloud-server-gateway/target:/app:ro
+    entrypoint: sh -c 'exec java -jar /app/*.jar'
+    healthcheck:
+      test: wget -O /dev/null http://localhost:9000/actuator/health
+    expose:
+      - 9000
+    environment:
+      - EUREKA_HOST=discovery
+      - OUTER_HOST=$OUTER_HOST
+    depends_on:
+      auth-oidc:
+        condition: service_healthy
+    ports:
+      - 9000:9000
+
+  video:
+    image: openjdk:8-jdk-alpine
+    volumes:
+      - ./orangetv-cloud-server-video/target:/app:ro
+      - ${VIDEO_ROOT}:/scan-path:ro
+    entrypoint: sh -c 'exec java -jar /app/*.jar'
+    healthcheck:
+      test: wget -O /dev/null http://localhost:9300/actuator/health
+    expose:
+      - 9300
+    environment:
+      - EUREKA_HOST=discovery
+      - REPO_URL=http://video-repo
+      - OUTER_HOST=$OUTER_HOST
+      - SCAN_PATH=/scan-path
+      - MYSQL_HOST=mysql
+    depends_on:
+      video-repo:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  maven:
+    image: maven:3.6.3-openjdk-8
+    volumes:
+      - .maven-repo:/root/.m2
+      - ./:/app-root
+    entrypoint: sh -c 'cd /app-root &&
+      exec mvn package -DskipTests'

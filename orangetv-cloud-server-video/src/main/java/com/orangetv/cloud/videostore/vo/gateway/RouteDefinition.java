@@ -1,6 +1,5 @@
 package com.orangetv.cloud.videostore.vo.gateway;
 
-import com.sun.istack.internal.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +27,6 @@ public class RouteDefinition {
     @NoArgsConstructor
     public static class PredicateDefinition {
 
-        @NotNull
         private String name;
 
         private Map<String, String> args = new LinkedHashMap<>();
@@ -79,7 +77,6 @@ public class RouteDefinition {
     @NoArgsConstructor
     public static class FilterDefinition {
 
-        @NotNull
         private String name;
 
         private Map<String, String> args = new LinkedHashMap<>();

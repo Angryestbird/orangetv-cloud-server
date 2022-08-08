@@ -4,13 +4,16 @@ server:
 eureka:
   instance:
     hostname: ${HOSTNAME:localhost}
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
 
 spring:
   application:
     name: @name@
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/orangetv
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/orangetv
     username: user
     password: pass
   security:
@@ -32,12 +35,12 @@ spring:
             issuer-uri: http://${OUTER_HOST:localhost}:9500
 
   kafka:
-    bootstrap-servers: host.docker.internal:9095
+    bootstrap-servers: kafka:9092,host.docker.internal:9095
   data:
     mongodb:
       gridfs:
         database: album-store
-      uri: mongodb://root:example@host.docker.internal
+      uri: mongodb://root:example@${MONGO_HOST:host.docker.internal}
       database: album-store
 
 orangetv:
@@ -48,8 +51,8 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO
 #    org.springframework.boot.autoconfigure:
 
 management:

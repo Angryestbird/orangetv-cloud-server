@@ -8,6 +8,9 @@ server:
 eureka:
   instance:
     hostname: ${HOSTNAME:localhost}
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
 
 spring:
   application:
@@ -17,8 +20,8 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO
 #    org.springframework.boot.autoconfigure:
 
 management:

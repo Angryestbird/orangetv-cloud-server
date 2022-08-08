@@ -1,6 +1,5 @@
 package com.orangetv.cloud.videostore.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orangetv.cloud.videostore.config.OrangeTVConfigProps;
 import com.orangetv.cloud.videostore.mapper.MyVideoMapper;
@@ -8,10 +7,12 @@ import com.orangetv.cloud.videostore.model.Video;
 import com.orangetv.cloud.videostore.repo.VideoRepo;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.kafka.KafkaException;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -44,13 +45,19 @@ public class ExtractorService implements ApplicationRunner {
             log.warn("file: '{}' metadata exists", file.getPath());
             return;
         }
+        videoMapper.insertSelective(video);
+        String json = toJsonString(video);
         try {
-            videoMapper.insertSelective(video);
-            String json = objectMapper.writeValueAsString(video);
             publisher.publishMetadata(video.getId(), json);
-        } catch (JsonProcessingException e) {
-            log.error("failed to parse obj {}", video, e);
+        } catch (KafkaException e) {
+            videoMapper.deleteByPrimaryKey(video.getId());
+            log.error("failed send message to kafka", e);
         }
+    }
+
+    @SneakyThrows
+    String toJsonString(Object o) {
+        return objectMapper.writeValueAsString(o);
     }
 
     static String calculateUrlPath(File rootDir, File file) {

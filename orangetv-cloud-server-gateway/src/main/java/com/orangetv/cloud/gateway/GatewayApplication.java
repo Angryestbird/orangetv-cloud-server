@@ -42,6 +42,8 @@ public class GatewayApplication {
             .pathMatchers(HttpMethod.POST, "/AUTH-SERVER/login").permitAll()
             .pathMatchers(HttpMethod.POST, "/actuator/gateway/**")
                 .hasAnyAuthority("SCOPE_gateway.metadata.write")
+            .pathMatchers(HttpMethod.GET, "/actuator/health")
+                .permitAll()
             .anyExchange().authenticated()
         ).csrf().disable().oauth2Login().and();
         // @formatter:on

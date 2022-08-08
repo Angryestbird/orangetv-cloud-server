@@ -4,13 +4,16 @@ server:
 eureka:
   instance:
     hostname: ${HOSTNAME:localhost}
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
 
 spring:
   application:
     name: @name@
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/orangetv
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/orangetv
     username: user
     password: pass
   security:
@@ -31,7 +34,7 @@ spring:
           spring:
             issuer-uri: http://${OUTER_HOST:localhost}:9500
   kafka:
-    bootstrap-servers: host.docker.internal:9095
+    bootstrap-servers: kafka:9092,host.docker.internal:9095
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
   sql:
@@ -45,8 +48,8 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO
     #    org.springframework.boot.autoconfigure:
     com.orangetv.cloud.videostore.mapper: TRACE
 
@@ -60,7 +63,7 @@ orangetv:
   video-repo-id: 0
   video-repo-url: ${REPO_URL:http://localhost:9090}
   video-scan-path: ${SCAN_PATH:D:\Video\videocache}
-  video-scan-suffixes: .mp4,.MP4
+  video-scan-suffixes: .mp4,.MP4.mkv,.MKV,.m4v
 mybatis:
   configuration:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl

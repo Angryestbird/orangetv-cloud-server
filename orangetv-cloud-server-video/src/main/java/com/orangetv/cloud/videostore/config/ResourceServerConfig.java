@@ -29,6 +29,8 @@ public class ResourceServerConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/actuator/health")
+                    .permitAll()
                 .mvcMatchers(HttpMethod.GET,"/**")
                     .access("hasAuthority('SCOPE_video.metadata.read')")
                 .mvcMatchers(HttpMethod.POST,"/**")

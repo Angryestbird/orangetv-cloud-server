@@ -17,6 +17,7 @@ package com.orangetv.cloud.authserver.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -44,7 +45,9 @@ public class DefaultSecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.anyRequest().authenticated()
+                        authorizeRequests
+                                .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .formLogin(login -> login.loginPage(loginPage)
                         .loginProcessingUrl("/login")
